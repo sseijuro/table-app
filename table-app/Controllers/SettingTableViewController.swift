@@ -72,16 +72,16 @@ extension SettingTableViewController {
             caption: concreteSetting.caption
         )
         
-        DispatchQueue.main.async { [weak self, baseCell, indexPath] in
+        DispatchQueue.main.async { [weak self, baseCell/*, indexPath*/] in
             guard let self = self,
-                  let imageURL = concreteSetting.avatar,
-                  let visibleRows = tableView.indexPathsForVisibleRows
+                  let imageURL = concreteSetting.avatar//,
+//                  let visibleRows = tableView.indexPathsForVisibleRows
             else { return }
-            let baseCellIsOnScreen = visibleRows.contains(indexPath)
-            self.pokemonFacade.fetchPokemonImage(url: imageURL) { [baseCellIsOnScreen] imageData in
-                if baseCellIsOnScreen {
+//            let baseCellIsOnScreen = visibleRows.contains(indexPath)
+            self.pokemonFacade.fetchPokemonImage(url: imageURL) { /*[baseCellIsOnScreen]*/ imageData in
+//                if baseCellIsOnScreen {
                     baseCell.setupImage(data: imageData)
-                }
+//                }
             }
         }
         

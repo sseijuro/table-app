@@ -26,7 +26,7 @@ extension Setting {
         Setting(title: loremOneParagraph, subtitle: loremOneParagraph),
         Setting(title: loremOneParagraph, subtitle: loremOneParagraph, caption: "Caption")
     ] }
-    
+
     static var loremOneParagraph: String {
         """
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et \

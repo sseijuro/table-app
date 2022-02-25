@@ -10,11 +10,25 @@ import UIKit
 final class SettingTableViewCell: UITableViewCell {
     static let identifier = String(describing: SettingTableViewCell.self)
     
-    private lazy var imageViewIcon: UIImageView = SettingUIBuilder.setupImageView()
-    private lazy var stateSwitch: UISwitch = SettingUIBuilder.setupSwitch()
-    private lazy var titleLabel: UILabel = SettingUIBuilder.setupLabel(size: 14, color: .black, lines: 2)
-    private lazy var subTitleLabel: UILabel = SettingUIBuilder.setupLabel()
-    private lazy var captionLabel: UILabel = SettingUIBuilder.setupLabel()
+    private lazy var imageViewIcon: UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.layer.cornerRadius = Constant.elementSize / 2
+        imageView.backgroundColor = .darkGray
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private lazy var stateSwitch: UISwitch = {
+        let switchView = UISwitch()
+        switchView.translatesAutoresizingMaskIntoConstraints = false
+        switchView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
+        return switchView
+    }()
+    
+    private lazy var titleLabel = setupLabel(size: 14, color: .black, lines: 2)
+    private lazy var subTitleLabel = setupLabel()
+    private lazy var captionLabel = setupLabel()
     
     private lazy var titleCenterYConstraint = titleLabel.centerYAnchor
         .constraint(equalTo: contentView.centerYAnchor)
@@ -41,50 +55,64 @@ final class SettingTableViewCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setupData(settingData: Setting) {
-        titleLabel.text = settingData.title
-        guard settingData.subtitle != nil else {
+    private func cleanUpLabels() {
+        titleCenterYConstraint.isActive = false
+        titleTopConstraint.isActive = false
+        subTitleBottomConstraint.isActive = false
+        captionBottomConstraint.isActive = false
+        
+        titleLabel.text = nil
+        subTitleLabel.text = nil
+        captionLabel.text = nil
+    }
+    
+    func setupText(title: String, subtitle _subtitle: String?, caption _caption: String?) {
+        cleanUpLabels()
+        
+        titleLabel.text = title
+        guard let subtitle = _subtitle,
+              !subtitle.isEmpty else {
             titleCenterYConstraint.isActive = true
             return
         }
         
-        subTitleLabel.text = settingData.subtitle
+        subTitleLabel.text = subtitle
         titleTopConstraint.isActive = true
-        guard settingData.caption != nil else {
+        guard let caption = _caption,
+              !caption.isEmpty else {
             subTitleBottomConstraint.isActive = true
             return
         }
         
-        captionLabel.text = settingData.caption
+        captionLabel.text = caption
         captionBottomConstraint.isActive = true
+    }
+    
+    func cleanUpImageView() {
+        DispatchQueue.main.async { [weak self] in
+            self?.imageViewIcon.image = nil
+            self?.imageViewIcon.backgroundColor = .darkGray
+        }
+    }
+    
+    func setupImage(data: Data?) {
+        cleanUpImageView()
+        guard let data = data else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.imageViewIcon.image = UIImage(data: data)
+            self?.imageViewIcon.backgroundColor = .none
+        }
     }
 }
 
 private extension SettingTableViewCell {
-    struct SettingUIBuilder {
-        static func setupImageView() -> UIImageView {
-            let imageView = UIImageView()
-            imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.layer.cornerRadius = Constant.elementSize / 2
-            imageView.backgroundColor = .darkGray
-            return imageView
-        }
-        
-        static func setupLabel(size: CGFloat = 12, color: UIColor = .gray, lines: Int = 0) -> UILabel {
-            let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.font = .systemFont(ofSize: size)
-            label.textColor = color
-            label.numberOfLines = lines
-            return label
-        }
-        
-        static func setupSwitch() -> UISwitch {
-            let switchView = UISwitch()
-            switchView.translatesAutoresizingMaskIntoConstraints = false
-            switchView.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
-            return switchView
-        }
+    func setupLabel(size: CGFloat = 12, color: UIColor = .gray, lines: Int = 0) -> UILabel {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: size)
+        label.textColor = color
+        label.numberOfLines = lines
+        return label
     }
     
     enum Constant {
@@ -92,10 +120,6 @@ private extension SettingTableViewCell {
         static let offsetX: CGFloat = 20
         static let offsetY: CGFloat = 10
         static let titleSize: CGFloat = 13
-        
-        static var maxTitleWidthDifference: CGFloat {
-            offsetX * 4 + elementSize * 2.25
-        }
     }
     
     var baseConstraintList: [NSLayoutConstraint] { [
@@ -111,16 +135,15 @@ private extension SettingTableViewCell {
         stateSwitch.widthAnchor.constraint(equalToConstant: Constant.elementSize * 1.25),
 
         titleLabel.leadingAnchor.constraint(equalTo: imageViewIcon.trailingAnchor, constant: Constant.offsetX),
-        titleLabel.widthAnchor.constraint(equalTo: contentView.widthAnchor,
-                                          constant: -Constant.maxTitleWidthDifference),
-
+        titleLabel.trailingAnchor.constraint(equalTo: stateSwitch.leadingAnchor, constant: -Constant.offsetX),
+        
         subTitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
-        subTitleLabel.leadingAnchor.constraint(equalTo: imageViewIcon.trailingAnchor, constant: Constant.offsetX),
-        subTitleLabel.widthAnchor.constraint(equalTo: titleLabel.widthAnchor),
+        subTitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+        subTitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
 
         captionLabel.topAnchor.constraint(equalTo: subTitleLabel.bottomAnchor),
-        captionLabel.leadingAnchor.constraint(equalTo: imageViewIcon.trailingAnchor, constant: Constant.offsetX),
-        captionLabel.widthAnchor.constraint(equalTo: titleLabel.widthAnchor),
+        captionLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+        captionLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
     ] }
     
 }
